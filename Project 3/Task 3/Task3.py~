@@ -1,0 +1,122 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
+def projection(X,eigenSet):
+    #X is the data matrix where each row is one data point
+    A=np.transpose(eigenSet)
+    projMat=np.dot(A,np.dot(np.linalg.inv(np.dot(eigenSet,A)),eigenSet))
+    projData=np.array([np.dot(projMat,X[i]) for i in range(len(X))]) 
+    #ProjData is the np.array that contains all the projected data points onto the eigenvector subspace
+    #ProjData elements are still vectors in R^N. Not R^k. (N>k - No reduction yet)
+    
+    return np.array([[np.dot(projData[i],eigenSet[j])/(np.linalg.norm(eigenSet[j])) for j in range(len(eigenSet))] for i in range(len(projData))])
+    #Returns the reduced data vectors which have number of components equal to the number of eigenvectors
+    
+    #plotting function will have something like:
+    #plt.scatter(np.transpose(projection(__))[0],np.transpose(projection(__))[1]) where 1st argument are all the x coordinates
+
+
+
+def projection2(X,eigenset):
+    eigensetNormalized=np.zeros((2,500))
+    eigensetNormalized[0]=eigenset[0]/(np.linalg.norm(eigenset[0]))
+    eigensetNormalized[1]=eigenset[1]/(np.linalg.norm(eigenset[1]))
+    return np.dot(X,eigenset.T)
+	#Instead of first projection to the eigenplane (like what we did in the function "projection"), 
+	#we directly take the inner product of the data matrix with the eigenvectors. This gives us
+	#directly (x,y) values of the data vectors in the eigenplane.
+
+
+
+
+def PCA(X,n): #Gives the n "largest" eigenvectors
+    dataMean=np.mean(X,axis=0)
+    zeroMeanData=X-dataMean
+    covMat=np.cov(np.transpose(zeroMeanData)) #Transpose as X is defined as each row being one data point. Not column.
+    eigenVals,eigenVecs=np.linalg.eigh(covMat)
+    
+    return eigenVecs.T[np.argpartition(eigenVals,-n)[-n:]]
+    #argpartition(eigenVals,-n)[-n:] gives the position values of n largest eigenVals.
+    #We use this to get the positions of the corresponding n eigenvectors
+    #Returns n largest eigenvectors
+
+
+
+
+def LDA(X,clsLength,n):
+    #http://multivariatestatsjl.readthedocs.org/en/latest/mclda.html
+    totalMean=np.mean(X,axis=0)
+    
+    #clsMean=np.zeros(len(clsLength))
+    #for i in range(len(clsLength)):
+    #    clsMean[i]=np.mean(X[:clsLength[i]],axis=0)
+    clsMean=np.array([np.mean(X[0:50],axis=0),np.mean(X[50:100],axis=0),np.mean(X[100:150],axis=0)])
+    #clsMean contains the means of each class. len(clsMean)=len(clsLength)=#classes
+    
+    meanList=np.concatenate([[clsMean[i]]*clsLength[i] for i in range(len(clsLength))])
+    #meanList contains elements which are equal to the number of data points. Here, len(meanList)=150 
+    
+    withinClassSM=np.zeros((len(X[0]),len(X[0])))
+    for i in range(len(X)):
+        withinClassSM=withinClassSM+np.outer((X-meanList)[i],(X-meanList)[i])
+    
+    betClassSM=np.zeros((len(X[0]),len(X[0])))
+    for i in range(len(clsMean)):
+        betClassSM=betClassSM+clsLength[i]*np.outer((clsMean[i]-totalMean),(clsMean[i]-totalMean))
+        
+    eigenVals,eigenVecs=np.linalg.eigh(np.dot(np.linalg.inv(withinClassSM),betClassSM))
+    
+    return eigenVecs.T[np.argpartition(eigenVals,-n)[-n:]]
+	#argpartition(eigenVals,-n)[-n:] gives the position values of n largest eigenVals.
+    #We use this to get the positions of the corresponding n eigenvectors
+    #Returns n largest eigenvectors
+
+
+
+
+
+if __name__=="__main__":
+	data=np.transpose(np.genfromtxt("/data-dimred-X.csv",delimiter=','))
+	classList=np.genfromtxt("/data-dimred-y.csv")
+
+	classLength=np.array([len(classList[classList==1]),len(classList[classList==2]),len(classList[classList==3])])
+	#Array that contains the length of each class.
+	#Here, classLength=[50,50,50]
+
+	#-------------------------------------------------------------------------------------------------------------
+	#2D
+
+	finalPCA=projection2(data,PCA(data,2))
+	finalLDA=projection2(data,LDA(data,classLength,2))
+	#These are the projected 2D points for LDA and PCA
+
+	#2D LDA
+	for m,n in zip([1., 2., 3.], ['red', 'blue', 'green']):
+		plt.scatter(finalLDA.T[0][np.where(classList == m)],finalLDA.T[1][np.where(classList == m)],color=n)
+	plt.legend(['Class 1', 'Class 2', 'Class 3'],loc=4)
+	plt.show()
+	
+	#FOR DIFFRENT SOLUTIONS >>>
+
+	#2D - For Comparison
+	'''
+	plt.scatter(finalLDA.T[0],finalLDA.T[1],color='red')
+	plt.scatter(finalPCA.T[0],finalPCA.T[1])
+	plt.legend(('LDA','PCA'),loc=3)
+	plt.show()
+	'''
+
+	#-------------------------------------------------------------------------------------------------------------
+	#3D
+	'''
+	finalPCA=projection2(data,PCA(data,3))
+	finalLDA=projection2(data,LDA(data,classLength,3))
+	fig = plt.figure()
+	axs = Axes3D(fig)
+	for m,n in zip([1., 2., 3.], ['red', 'blue', 'green']):
+		axs.scatter3D((finalLDA.T)[0][np.where(classList == m)],(finalLDA.T)[1][np.where(classList == m)],(finalLDA.T)[2][np.where(classList == m)],color=n)
+	plt.legend(['Class 1', 'Class 2', 'Class 3'],loc=4)
+	plt.show()
+	'''

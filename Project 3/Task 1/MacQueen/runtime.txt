@@ -1,0 +1,4 @@
+Average time for MacQueen algorithm:
+0.0348999977112
+
+Not changing after diff runs (obvious :()

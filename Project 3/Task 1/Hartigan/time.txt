@@ -1,0 +1,22 @@
+Converged after 10 iterations
+5.02300000191
+Converged after 10 iterations
+5.0039999485
+Converged after 10 iterations
+4.97399997711
+Converged after 10 iterations
+4.93300008774
+Converged after 10 iterations
+4.94099998474
+Converged after 10 iterations
+4.9319999218
+Converged after 10 iterations
+5.13700008392
+Converged after 10 iterations
+4.93899989128
+Converged after 10 iterations
+4.95399999619
+Converged after 10 iterations
+4.96099996567
+Average time for Hartigan algorithm:
+4.97979998589
