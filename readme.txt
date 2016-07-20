@@ -1,0 +1,1 @@
+Solution for Pattern Recognition class.University of Bonn 2015 Summer semester.Description about the tasks are given as a pdf file in each folder.
